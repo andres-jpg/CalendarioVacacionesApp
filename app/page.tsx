@@ -33,10 +33,9 @@ export default function DashboardPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-12">
-        <h1 className="text-4xl font-bold text-foreground mb-3">Dashboard</h1>
-        <p className="text-lg text-muted-foreground">
-          Sistema de gestión de vacaciones de empleados
-        </p>
+        <h1 className="text-4xl font-bold text-foreground mb-3">
+          Sistema integral gestión de vacaciones
+        </h1>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12">

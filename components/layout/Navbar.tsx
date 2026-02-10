@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export function Navbar() {
   const router = useRouter();
@@ -11,7 +11,7 @@ export function Navbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.push("/login");
     router.refresh();
   };
 
@@ -19,7 +19,9 @@ export function Navbar() {
     <nav className="border-b border-border bg-card shadow-sm">
       <div className="flex h-16 items-center px-4 md:px-6">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold text-foreground">Gestión de Vacaciones</h1>
+          <h1 className="text-xl font-bold text-foreground">
+            S.I. gestión de Vacaciones
+          </h1>
         </div>
         <div className="ml-auto flex items-center space-x-4">
           <Button

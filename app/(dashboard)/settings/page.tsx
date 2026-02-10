@@ -1,22 +1,29 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getVacationSettings } from './actions';
+import { VacationSettingsList } from '@/components/settings/vacation-settings-list';
 
-export default function SettingsPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function SettingsPage() {
+  const result = await getVacationSettings();
+  const settings = result.data || [];
+
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Configuración</h1>
-        <p className="text-muted-foreground mt-1">Ajustes del sistema y días de vacaciones por año</p>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground">Configuración</h1>
+        <p className="text-muted-foreground mt-2">Ajustes del sistema y días de vacaciones por año</p>
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-1.5">
           <CardTitle>Días de vacaciones por año</CardTitle>
           <CardDescription>
             Configure los días de vacaciones por defecto para cada año
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Implementación en progreso...</p>
+          <VacationSettingsList settings={settings} />
         </CardContent>
       </Card>
     </div>
