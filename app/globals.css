@@ -1,50 +1,47 @@
 @import "tailwindcss";
 
 @theme {
-  /* Surface elevation - warm neutrals with beige undertone */
-  --color-background: 30 20% 97%;
-  --color-foreground: 222 47% 11%;
+  /* Surface - dark backgrounds */
+  --color-background: 222 47% 6%;
+  --color-foreground: 210 20% 95%;
 
-  /* Cards and elevated surfaces - clean white with warm context */
-  --color-card: 0 0% 100%;
-  --color-card-foreground: 222 47% 11%;
+  /* Cards - slightly elevated dark surface */
+  --color-card: 222 47% 9%;
+  --color-card-foreground: 210 20% 95%;
 
-  /* Popovers - higher elevation */
-  --color-popover: 0 0% 100%;
-  --color-popover-foreground: 222 47% 11%;
+  /* Popovers - higher elevation dark */
+  --color-popover: 222 47% 9%;
+  --color-popover-foreground: 210 20% 95%;
 
-  /* Primary action - warm teal (ocean/vacation blue-green) */
+  /* Primary action - warm teal */
   --color-primary: 188 94% 40%;
   --color-primary-foreground: 0 0% 100%;
 
-  /* Secondary surfaces - warm sand/neutral */
-  --color-secondary: 30 25% 94%;
-  --color-secondary-foreground: 222 47% 11%;
+  /* Secondary surfaces */
+  --color-secondary: 222 40% 14%;
+  --color-secondary-foreground: 210 20% 95%;
 
-  /* Muted content - warm gray */
-  --color-muted: 30 15% 94%;
-  --color-muted-foreground: 215 16% 46%;
+  /* Muted content */
+  --color-muted: 222 40% 14%;
+  --color-muted-foreground: 215 20% 55%;
 
-  /* Accent - light teal for hover states */
-  --color-accent: 188 40% 96%;
-  --color-accent-foreground: 188 94% 30%;
+  /* Accent - teal tinted dark */
+  --color-accent: 222 40% 16%;
+  --color-accent-foreground: 188 80% 60%;
 
   /* Semantic colors */
-  /* Destructive - coral-based red (softer, warmer than pure red) */
   --color-destructive: 5 78% 57%;
   --color-destructive-foreground: 0 0% 100%;
 
-  /* Success - warm approved green */
   --color-success: 142 65% 45%;
   --color-success-foreground: 0 0% 100%;
 
-  /* Warning - warm amber */
   --color-warning: 38 92% 50%;
   --color-warning-foreground: 0 0% 100%;
 
-  /* Borders - subtle warm separation */
-  --color-border: 30 18% 88%;
-  --color-input: 30 18% 88%;
+  /* Borders - subtle dark separation */
+  --color-border: 222 30% 18%;
+  --color-input: 222 30% 18%;
   --color-ring: 188 94% 40%;
 
   /* Radius */

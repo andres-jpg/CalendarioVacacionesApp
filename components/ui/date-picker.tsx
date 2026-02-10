@@ -6,7 +6,7 @@ import { es } from "date-fns/locale"
 import { Calendar as CalendarIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 
 interface DatePickerProps {
@@ -16,40 +16,38 @@ interface DatePickerProps {
   disabled?: boolean
 }
 
-export function DatePicker({ date, onDateChange, placeholder = "dd/mm/aaaa", disabled = false }: DatePickerProps) {
-  const [isOpen, setIsOpen] = React.useState(false)
+export function DatePicker({ date, onDateChange, placeholder = "Selecciona una fecha", disabled = false }: DatePickerProps) {
+  const [open, setOpen] = React.useState(false)
 
   return (
-    <div className="space-y-3">
-      <div className="relative">
-        <Input
-          value={date ? format(date, "dd/MM/yyyy") : ""}
-          placeholder={placeholder}
-          readOnly
-          disabled={disabled}
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          className={cn(
-            "pl-10 cursor-pointer",
-            !date && "text-muted-foreground"
-          )}
-        />
-        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      </div>
-
-      {isOpen && !disabled && (
-        <div className="border rounded-lg bg-card shadow-lg p-3">
+    <div className="flex flex-col gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        disabled={disabled}
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "w-full justify-start text-left font-normal h-11",
+          !date && "text-muted-foreground"
+        )}
+      >
+        <CalendarIcon className="mr-2 h-4 w-4" />
+        {date ? format(date, "PPP", { locale: es }) : <span>{placeholder}</span>}
+      </Button>
+      {open && (
+        <div className="rounded-lg border bg-card p-0 shadow-sm flex justify-center">
           <Calendar
             mode="single"
             selected={date}
             onSelect={(selectedDate) => {
               onDateChange(selectedDate)
-              if (selectedDate) {
-                setIsOpen(false)
-              }
+              setOpen(false)
             }}
-            initialFocus
+            captionLayout="dropdown"
+            fromYear={1990}
+            toYear={2050}
+            autoFocus
             locale={es}
-            className="rounded-md"
           />
         </div>
       )}
