@@ -16,24 +16,20 @@ export function Navbar() {
   };
 
   return (
-    <nav className="border-b border-border bg-card shadow-sm">
-      <div className="flex h-16 items-center px-4 md:px-6">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold text-foreground">
-            S.I. gestión de Vacaciones
-          </h1>
-        </div>
-        <div className="ml-auto flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Cerrar sesión
-          </Button>
-        </div>
+    <nav className="bg-sidebar border-b border-sidebar-border shrink-0">
+      <div className="flex h-16 items-center justify-between px-6">
+        <span className="text-sm text-muted-foreground">
+          Sistema Integral de Gestión de Vacaciones
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          className="gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-sm"
+        >
+          <LogOut className="h-4 w-4" />
+          Cerrar sesión
+        </Button>
       </div>
     </nav>
   );

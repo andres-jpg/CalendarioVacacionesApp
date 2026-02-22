@@ -21,9 +21,9 @@ export default async function CalendarPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Calendario de Vacaciones</h1>
-        <p className="text-muted-foreground mt-1">Gestione y visualice las vacaciones de los empleados</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Calendario de Vacaciones</h1>
+        <p className="text-muted-foreground mt-1 text-sm">Gestione y visualice las vacaciones de los empleados</p>
       </div>
 
       <div className="space-y-6">

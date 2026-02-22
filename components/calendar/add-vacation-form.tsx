@@ -108,7 +108,6 @@ export function AddVacationForm({ employees }: AddVacationFormProps) {
     })
   }
 
-  const allSelected = [...existingDates, ...newSelectedDates]
   const canSave = newSelectedDates.length > 0 && newSelectedDates.length <= availableDays
 
   return (
@@ -144,7 +143,7 @@ export function AddVacationForm({ employees }: AddVacationFormProps) {
             <Calendar
               locale={es}
               mode="multiple"
-              selected={allSelected}
+              selected={existingDates}
               onDayClick={handleDayClick}
               numberOfMonths={12}
               defaultMonth={new Date(currentYear, 0)}
@@ -153,9 +152,11 @@ export function AddVacationForm({ employees }: AddVacationFormProps) {
               disabled={[{ dayOfWeek: [0, 6] }]}
               modifiers={{
                 existing: existingDates,
+                newSelected: newSelectedDates,
               }}
               modifiersClassNames={{
                 existing: "opacity-60 cursor-not-allowed",
+                newSelected: "!bg-red-500 !text-black !rounded-md font-semibold",
               }}
               className="[--cell-size:--spacing(8)]"
               classNames={{

@@ -85,26 +85,26 @@ export default function NewEmployeePage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="mb-8">
+    <div className="max-w-2xl mx-auto w-full">
+      <div className="mb-6">
         <Link href="/employees">
-          <Button variant="ghost" size="sm" className="gap-2">
+          <Button variant="ghost" size="sm" className="gap-2 -ml-2 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
             Volver a empleados
           </Button>
         </Link>
       </div>
 
-      <Card className="border-border shadow-sm">
-        <CardHeader className="space-y-2 border-b border-border pb-6">
-          <CardTitle className="text-2xl">Nuevo Empleado</CardTitle>
-          <CardDescription className="text-base">
+      <Card className="border-border">
+        <CardHeader className="border-b border-border pb-5">
+          <CardTitle className="text-xl">Nuevo Empleado</CardTitle>
+          <CardDescription>
             Complete los datos del nuevo empleado
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
                 control={form.control}
                 name="full_name"
@@ -166,20 +166,20 @@ export default function NewEmployeePage() {
                 )}
               />
 
-              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-border">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-5 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => router.push("/employees")}
                   disabled={isSubmitting}
-                  className="flex-1 h-11"
+                  className="sm:w-auto"
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 h-11 gap-2"
+                  className="gap-2"
                 >
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {isSubmitting ? "Guardando..." : "Guardar empleado"}

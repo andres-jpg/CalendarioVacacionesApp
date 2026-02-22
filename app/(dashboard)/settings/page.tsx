@@ -9,10 +9,10 @@ export default async function SettingsPage() {
   const settings = result.data || [];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="max-w-3xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Configuración</h1>
-        <p className="text-muted-foreground mt-2">Ajustes del sistema y días de vacaciones por año</p>
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Configuración</h1>
+        <p className="text-muted-foreground mt-1 text-sm">Días de vacaciones por defecto para cada año</p>
       </div>
 
       <Card>
