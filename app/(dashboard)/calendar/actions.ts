@@ -31,29 +31,29 @@ export async function getEmployeesVacationSummary(year: number): Promise<{
 
     const employeeIds = employees.map((e: any) => e.id)
 
-    // Obtener balances del año
-    const { data: balances, error: balError } = await (supabase
-      .from("vacation_balance") as any)
-      .select("employee_id, days_from_previous_year, days_current_year")
-      .eq("year", year)
-      .in("employee_id", employeeIds)
+    // Obtener balances y días de vacaciones en paralelo
+    const startDate = `${year}-01-01`
+    const endDate = `${year}-12-31`
 
+    const [balancesResult, vacationDaysResult] = await Promise.all([
+      (supabase.from("vacation_balance") as any)
+        .select("employee_id, days_from_previous_year, days_current_year")
+        .eq("year", year)
+        .in("employee_id", employeeIds),
+      (supabase.from("vacation_days") as any)
+        .select("employee_id")
+        .gte("date", startDate)
+        .lte("date", endDate)
+        .in("employee_id", employeeIds),
+    ])
+
+    const { data: balances, error: balError } = balancesResult
     if (balError) {
       console.error("Error fetching balances:", balError)
       return { success: false, error: balError.message, data: [] }
     }
 
-    // Obtener días de vacaciones tomados en el año
-    const startDate = `${year}-01-01`
-    const endDate = `${year}-12-31`
-
-    const { data: vacationDays, error: vdError } = await (supabase
-      .from("vacation_days") as any)
-      .select("employee_id")
-      .gte("date", startDate)
-      .lte("date", endDate)
-      .in("employee_id", employeeIds)
-
+    const { data: vacationDays, error: vdError } = vacationDaysResult
     if (vdError) {
       console.error("Error fetching vacation days:", vdError)
       return { success: false, error: vdError.message, data: [] }

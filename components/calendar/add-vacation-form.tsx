@@ -149,13 +149,13 @@ export function AddVacationForm({ employees }: AddVacationFormProps) {
               defaultMonth={new Date(currentYear, 0)}
               startMonth={new Date(currentYear, 0)}
               endMonth={new Date(currentYear, 11)}
-              disabled={[{ dayOfWeek: [0, 6] }]}
+              disabled={[{ dayOfWeek: [0, 6] }, ...existingDates]}
               modifiers={{
                 existing: existingDates,
                 newSelected: newSelectedDates,
               }}
               modifiersClassNames={{
-                existing: "opacity-60 cursor-not-allowed",
+                existing: "!bg-yellow-400 !text-black !opacity-100 cursor-not-allowed font-medium",
                 newSelected: "!bg-red-500 !text-black !rounded-md font-semibold",
               }}
               className="[--cell-size:--spacing(8)]"

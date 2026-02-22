@@ -26,12 +26,22 @@ export async function createEmployee(data: EmployeeFormData) {
       is_active: data.is_active ?? true,
     }
 
-    const { data: employee, error } = await (supabase
-      .from("employees") as any)
-      .insert([employeeData])
-      .select()
-      .single()
+    const currentYear = new Date().getFullYear()
+    const hireDate = new Date(data.hire_date)
 
+    // Insertar empleado y obtener configuración de vacaciones en paralelo
+    const [employeeResult, settingsResult] = await Promise.all([
+      (supabase.from("employees") as any)
+        .insert([employeeData])
+        .select()
+        .single(),
+      (supabase.from("vacation_settings") as any)
+        .select("default_days")
+        .eq("year", currentYear)
+        .single(),
+    ])
+
+    const { data: employee, error } = employeeResult
     if (error) {
       console.error("Error creating employee:", error)
       return {
@@ -40,16 +50,7 @@ export async function createEmployee(data: EmployeeFormData) {
       }
     }
 
-    // Calcular y crear el balance de vacaciones para el año actual
-    const currentYear = new Date().getFullYear()
-    const hireDate = new Date(data.hire_date)
-
-    // Obtener la configuración de días de vacaciones para el año actual
-    const { data: settings } = await (supabase
-      .from("vacation_settings") as any)
-      .select("default_days")
-      .eq("year", currentYear)
-      .single()
+    const { data: settings } = settingsResult
 
     if (settings) {
       // Calcular días proporcionales si ingresó durante el año actual

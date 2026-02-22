@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -32,6 +32,14 @@ export function VacationSummaryTable({ initialData, years, initialYear }: Vacati
   const [selectedYear, setSelectedYear] = useState(initialYear)
   const [data, setData] = useState(initialData)
   const [isPending, startTransition] = useTransition()
+
+  // Sincronizar cuando el Server Component se refresca (ej. después de guardar vacaciones)
+  // Solo aplica si el año visible es el año actual (initialYear)
+  useEffect(() => {
+    if (selectedYear === initialYear) {
+      setData(initialData)
+    }
+  }, [initialData])
 
   const handleYearChange = (value: string) => {
     const year = parseInt(value, 10)
