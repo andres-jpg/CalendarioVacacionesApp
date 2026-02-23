@@ -239,3 +239,64 @@ export async function addVacationDays(
     return { success: false, error: "Error inesperado al guardar los días de vacaciones" }
   }
 }
+
+export async function getEmployeeComments(
+  employeeId: string,
+  year: number
+): Promise<{
+  success: boolean
+  error?: string
+  data: { id: string; text: string }[]
+}> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await (supabase
+      .from("comments") as any)
+      .select("id, text")
+      .eq("employee_id", employeeId)
+      .eq("year", year)
+
+    if (error) {
+      console.error("Error fetching comments:", error)
+      return { success: false, error: error.message, data: [] }
+    }
+
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error("Error in getEmployeeComments:", error)
+    return { success: false, error: "Error inesperado", data: [] }
+  }
+}
+
+export async function addComment(
+  employeeId: string,
+  text: string,
+  year: number
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient()
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: "No autenticado" }
+    }
+
+    const date = toISODate(new Date())
+
+    const { error: insertError } = await (supabase
+      .from("comments") as any)
+      .insert({ employee_id: employeeId, text, date, year })
+
+    if (insertError) {
+      console.error("Error inserting comment:", insertError)
+      return { success: false, error: insertError.message }
+    }
+
+    revalidatePath("/calendar")
+    return { success: true }
+  } catch (error) {
+    console.error("Error in addComment:", error)
+    return { success: false, error: "Error inesperado al guardar el comentario" }
+  }
+}

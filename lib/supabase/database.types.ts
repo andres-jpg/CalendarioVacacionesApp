@@ -66,7 +66,6 @@ export interface Database {
           id: string
           employee_id: string
           date: string
-          observations: string | null
           created_at: string
           updated_at: string
         }
@@ -74,7 +73,6 @@ export interface Database {
           id?: string
           employee_id: string
           date: string
-          observations?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -82,9 +80,31 @@ export interface Database {
           id?: string
           employee_id?: string
           date?: string
-          observations?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      comments: {
+        Row: {
+          id: string
+          employee_id: string
+          text: string
+          date: string
+          year: number
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          text: string
+          date: string
+          year: number
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          text?: string
+          date?: string
+          year?: number
         }
       }
       vacation_balance: {
