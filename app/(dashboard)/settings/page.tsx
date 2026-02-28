@@ -1,16 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getVacationSettings } from './actions';
 import { VacationSettingsList } from '@/components/settings/vacation-settings-list';
+import { BulkExportPanel } from '@/components/settings/bulk-export-panel';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
   const result = await getVacationSettings();
-  const settings = result.data || [];
+  const settings = (result.data as any[]) || [];
+  const years = settings.map((s: any) => s.year as number);
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-8">
+    <div className="max-w-3xl space-y-6">
+      <div className="mb-2">
         <h1 className="text-3xl font-semibold text-foreground tracking-tight">Configuración</h1>
         <p className="text-muted-foreground mt-1 text-sm">Días de vacaciones por defecto para cada año</p>
       </div>
@@ -26,6 +28,8 @@ export default async function SettingsPage() {
           <VacationSettingsList settings={settings} />
         </CardContent>
       </Card>
+
+      <BulkExportPanel availableYears={years} />
     </div>
   );
 }

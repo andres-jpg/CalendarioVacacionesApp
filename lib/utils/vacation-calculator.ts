@@ -61,3 +61,54 @@ export function calculateAvailableBalance(
 ): number {
   return daysFromPreviousYear + daysCurrentYear - daysTaken;
 }
+
+/**
+ * Calcula los días de vacaciones devengados hasta una fecha concreta.
+ * Para años pasados devuelve el total del año (ya devengado por completo).
+ * Para el año en curso aplica prorrateo desde la fecha efectiva de inicio.
+ * Para años futuros devuelve 0.
+ *
+ * @param hireDate Fecha de ingreso del empleado
+ * @param targetYear Año del cálculo
+ * @param daysCurrentYear Días asignados para ese año (ya almacenados en vacation_balance)
+ * @param today Fecha de referencia (normalmente la fecha actual)
+ * @returns Días devengados hasta `today` (redondeados a 2 decimales)
+ */
+export function calculateAccruedToDate(
+  hireDate: Date,
+  targetYear: number,
+  daysCurrentYear: number,
+  today: Date
+): number {
+  const todayYear = today.getFullYear();
+
+  // Año pasado → ya está todo devengado
+  if (todayYear > targetYear) return daysCurrentYear;
+
+  // Año futuro → todavía no empieza a devengar
+  if (todayYear < targetYear) return 0;
+
+  // Año en curso ─────────────────────────────────────────────────
+  const startOfYear = new Date(targetYear, 0, 1);
+  const endOfYear = new Date(targetYear, 11, 31);
+
+  // El empleado empieza a devengar desde su fecha de alta o el 1 de enero,
+  // lo que sea más tardío
+  const effectiveStart = hireDate > startOfYear ? hireDate : startOfYear;
+
+  // Días totales del periodo que le corresponden en este año
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysEntitled = Math.ceil((endOfYear.getTime() - effectiveStart.getTime()) / msPerDay) + 1;
+
+  if (daysEntitled <= 0) return 0;
+
+  // No contar más allá del fin de año
+  const cutoff = today < endOfYear ? today : endOfYear;
+  const daysWorkedToDate = Math.max(
+    0,
+    Math.ceil((cutoff.getTime() - effectiveStart.getTime()) / msPerDay) + 1
+  );
+
+  const accrued = (daysCurrentYear / daysEntitled) * daysWorkedToDate;
+  return Math.round(accrued * 100) / 100;
+}

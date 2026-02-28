@@ -33,6 +33,10 @@ export interface VacationSummary {
   daysCurrentYear: number;
   daysTaken: number;
   availableDays: number;
+  /** Días de este año devengados hasta hoy (prorrateo por fecha de alta) */
+  accruedToDate: number;
+  /** Días disponibles a día de hoy = año anterior + devengado hoy − tomados */
+  availableToday: number;
 }
 
 // Tipos para formularios

@@ -86,13 +86,18 @@ export function VacationSummaryTable({ initialData, years, initialYear }: Vacati
               <TableHead className="text-right">Días año anterior</TableHead>
               <TableHead className="text-right">Días este año</TableHead>
               <TableHead className="text-right">Días tomados</TableHead>
-              <TableHead className="text-right">Días disponibles</TableHead>
+              <TableHead className="text-right">Disponibles (año completo)</TableHead>
+              <TableHead className="text-right">
+                <span title="Días devengados hasta hoy más saldo del año anterior, menos días tomados">
+                  Disponibles hoy
+                </span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   No se encontraron empleados
                 </TableCell>
               </TableRow>
@@ -105,11 +110,19 @@ export function VacationSummaryTable({ initialData, years, initialYear }: Vacati
                   <TableCell className="text-right">{Math.round(item.daysTaken)}</TableCell>
                   <TableCell
                     className={cn(
-                      "text-right font-semibold",
+                      "text-right",
                       item.availableDays <= 0 ? "text-destructive" : ""
                     )}
                   >
                     {Math.round(item.availableDays)}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      "text-right font-semibold",
+                      item.availableToday <= 0 ? "text-destructive" : "text-primary"
+                    )}
+                  >
+                    {Math.round(item.availableToday)}
                   </TableCell>
                 </TableRow>
               ))

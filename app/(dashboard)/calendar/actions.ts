@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import type { VacationSummary } from "@/types"
 import { toISODate } from "@/lib/utils/date-helpers"
+import { calculateAccruedToDate } from "@/lib/utils/vacation-calculator"
 
 export async function getEmployeesVacationSummary(year: number): Promise<{
   success: boolean
@@ -16,7 +17,7 @@ export async function getEmployeesVacationSummary(year: number): Promise<{
     // Obtener empleados activos
     const { data: employees, error: empError } = await (supabase
       .from("employees") as any)
-      .select("id, full_name")
+      .select("id, full_name, hire_date")
       .eq("is_active", true)
       .order("full_name")
 
@@ -75,11 +76,16 @@ export async function getEmployeesVacationSummary(year: number): Promise<{
     }
 
     // Construir resumen
+    const today = new Date()
     const summary: VacationSummary[] = employees.map((emp: any) => {
       const balance = balanceMap[emp.id]
       const daysFromPreviousYear = balance?.days_from_previous_year ?? 0
       const daysCurrentYear = balance?.days_current_year ?? 0
       const daysTaken = daysTakenMap[emp.id] ?? 0
+
+      const hireDate = emp.hire_date ? new Date(emp.hire_date + "T00:00:00") : new Date(year, 0, 1)
+      const accruedToDate = calculateAccruedToDate(hireDate, year, daysCurrentYear, today)
+      const availableToday = daysFromPreviousYear + accruedToDate - daysTaken
 
       return {
         employeeId: emp.id,
@@ -89,6 +95,8 @@ export async function getEmployeesVacationSummary(year: number): Promise<{
         daysCurrentYear,
         daysTaken,
         availableDays: daysFromPreviousYear + daysCurrentYear - daysTaken,
+        accruedToDate,
+        availableToday,
       }
     })
 
@@ -176,52 +184,74 @@ export async function addVacationDays(
       return { success: false, error: "No se seleccionaron días" }
     }
 
-    // Determinar el año de las fechas
-    const year = parseInt(dates[0].substring(0, 4), 10)
+    // Agrupar fechas por año para validar cada año por separado
+    const byYear = new Map<number, string[]>()
+    for (const date of dates) {
+      const y = parseInt(date.substring(0, 4), 10)
+      byYear.set(y, [...(byYear.get(y) ?? []), date])
+    }
+    const years = [...byYear.keys()]
 
-    // Obtener balance y días existentes en paralelo (async-parallel)
-    const [balanceResult, existingResult] = await Promise.all([
+    // Obtener balances y días existentes de todos los años en paralelo
+    const [balancesResult, ...existingResults] = await Promise.all([
       (supabase.from("vacation_balance") as any)
-        .select("days_from_previous_year, days_current_year")
+        .select("year, days_from_previous_year, days_current_year")
         .eq("employee_id", employeeId)
-        .eq("year", year)
-        .single(),
-      (supabase.from("vacation_days") as any)
-        .select("id")
-        .eq("employee_id", employeeId)
-        .gte("date", `${year}-01-01`)
-        .lte("date", `${year}-12-31`),
+        .in("year", years),
+      ...years.map((y) =>
+        (supabase.from("vacation_days") as any)
+          .select("id")
+          .eq("employee_id", employeeId)
+          .gte("date", `${y}-01-01`)
+          .lte("date", `${y}-12-31`)
+      ),
     ])
 
-    const { data: balance, error: balError } = balanceResult
-    if (balError && balError.code !== "PGRST116") {
-      console.error("Error fetching balance:", balError)
+    const { data: balances, error: balError } = balancesResult
+    if (balError) {
+      console.error("Error fetching balances:", balError)
       return { success: false, error: balError.message }
     }
 
-    const totalAvailable = (balance?.days_from_previous_year ?? 0) + (balance?.days_current_year ?? 0)
-
-    const { data: existingDays, error: existError } = existingResult
-    if (existError) {
-      console.error("Error fetching existing days:", existError)
-      return { success: false, error: existError.message }
+    // Mapear días existentes por año
+    const existingByYear = new Map<number, number>()
+    for (let i = 0; i < years.length; i++) {
+      const { data: existingDays, error: existError } = existingResults[i]
+      if (existError) {
+        console.error("Error fetching existing days:", existError)
+        return { success: false, error: existError.message }
+      }
+      existingByYear.set(years[i], existingDays?.length ?? 0)
     }
 
-    const daysTaken = existingDays?.length ?? 0
-    const availableDays = totalAvailable - daysTaken
+    // Validar con cascada: el excedente de años anteriores cubre el déficit de años posteriores.
+    // Ej: 3 días sobrantes en 2026 + 0 en 2027 → se pueden seleccionar 2 en dic-2026 y 1 en ene-2027.
+    const sortedYears = [...byYear.keys()].sort((a, b) => a - b)
+    let surplus = 0
 
-    if (dates.length > availableDays) {
-      return {
-        success: false,
-        error: `El empleado no tiene suficientes días disponibles. Disponibles: ${Math.round(availableDays)}, solicitados: ${dates.length}`,
+    for (const y of sortedYears) {
+      const balance = (balances ?? []).find((b: any) => b.year === y)
+      const totalAvailable = (balance?.days_from_previous_year ?? 0) + (balance?.days_current_year ?? 0)
+      const daysTaken = existingByYear.get(y) ?? 0
+      const available = totalAvailable - daysTaken
+      const requesting = byYear.get(y)!.length
+      const diff = available - requesting
+
+      if (diff >= 0) {
+        surplus += diff
+      } else if (surplus + diff >= 0) {
+        surplus += diff
+      } else {
+        const totalAvailableWithSurplus = Math.round(surplus + available)
+        return {
+          success: false,
+          error: `Sin días suficientes. Disponibles: ${totalAvailableWithSurplus}, solicitados para ${y}: ${requesting}`,
+        }
       }
     }
 
-    // Insertar días de vacaciones
-    const rows = dates.map((date) => ({
-      employee_id: employeeId,
-      date,
-    }))
+    // Insertar todos los días
+    const rows = dates.map((date) => ({ employee_id: employeeId, date }))
 
     const { error: insertError } = await (supabase
       .from("vacation_days") as any)
