@@ -286,6 +286,89 @@ export async function updateEmployee(employeeId: string, data: EmployeeFormData)
   }
 }
 
+export interface SimulationResult {
+  found: boolean
+  targetDate: string
+  targetYear: number
+  daysFromPreviousYear: number
+  accruedByDate: number
+  daysTaken: number
+  projectedAvailable: number
+}
+
+export async function simulateVacationBalance(
+  employeeId: string,
+  targetDate: string
+): Promise<{ success: boolean; error?: string; data: SimulationResult | null }> {
+  try {
+    const supabase = await createClient()
+    const targetDateObj = new Date(targetDate + "T00:00:00")
+    const targetYear = targetDateObj.getFullYear()
+
+    const [balanceResult, empResult] = await Promise.all([
+      (supabase.from("vacation_balance") as any)
+        .select("days_from_previous_year, days_current_year")
+        .eq("employee_id", employeeId)
+        .eq("year", targetYear)
+        .maybeSingle(),
+      (supabase.from("employees") as any)
+        .select("hire_date")
+        .eq("id", employeeId)
+        .single(),
+    ])
+
+    if (empResult.error) {
+      return { success: false, error: empResult.error.message, data: null }
+    }
+
+    if (!balanceResult.data) {
+      return {
+        success: true,
+        data: {
+          found: false,
+          targetDate,
+          targetYear,
+          daysFromPreviousYear: 0,
+          accruedByDate: 0,
+          daysTaken: 0,
+          projectedAvailable: 0,
+        },
+      }
+    }
+
+    const { days_from_previous_year: daysFromPreviousYear, days_current_year: daysCurrentYear } = balanceResult.data
+
+    const { count: daysTaken } = await (supabase.from("vacation_days") as any)
+      .select("id", { count: "exact", head: true })
+      .eq("employee_id", employeeId)
+      .gte("date", `${targetYear}-01-01`)
+      .lte("date", targetDate)
+
+    const hireDate = empResult.data.hire_date
+      ? new Date(empResult.data.hire_date + "T00:00:00")
+      : new Date(targetYear, 0, 1)
+
+    const accruedByDate = calculateAccruedToDate(hireDate, targetYear, daysCurrentYear, targetDateObj)
+    const projectedAvailable = daysFromPreviousYear + accruedByDate - (daysTaken ?? 0)
+
+    return {
+      success: true,
+      data: {
+        found: true,
+        targetDate,
+        targetYear,
+        daysFromPreviousYear,
+        accruedByDate,
+        daysTaken: daysTaken ?? 0,
+        projectedAvailable,
+      },
+    }
+  } catch (error) {
+    console.error("Error in simulateVacationBalance:", error)
+    return { success: false, error: "Error inesperado al simular el balance", data: null }
+  }
+}
+
 export async function deactivateEmployee(employeeId: string) {
   try {
     const supabase = await createClient()

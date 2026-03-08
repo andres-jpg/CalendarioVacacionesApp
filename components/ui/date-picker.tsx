@@ -31,11 +31,13 @@ export function DatePicker({ date, onDateChange, placeholder = "Selecciona una f
           !date && "text-muted-foreground"
         )}
       >
-        <CalendarIcon className="mr-2 h-4 w-4" />
-        {date ? format(date, "PPP", { locale: es }) : <span>{placeholder}</span>}
+        <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+        <span className="truncate">
+          {date ? format(date, "PPP", { locale: es }) : placeholder}
+        </span>
       </Button>
       {open && (
-        <div className="rounded-lg border bg-card p-0 shadow-sm flex justify-center">
+        <div className="w-[300px] rounded-lg border border-border bg-card">
           <Calendar
             mode="single"
             selected={date}

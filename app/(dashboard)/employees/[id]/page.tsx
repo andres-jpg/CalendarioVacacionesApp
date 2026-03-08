@@ -3,6 +3,7 @@ import { getEmployee } from "../actions"
 import { getVacationSettings } from "@/app/(dashboard)/settings/actions"
 import { EditEmployeeForm } from "./edit-employee-form"
 import { EmployeeExportPanel } from "@/components/employees/employee-export-panel"
+import { VacationSimulator } from "@/components/employees/vacation-simulator"
 
 export default async function EditEmployeePage({
   params,
@@ -26,6 +27,7 @@ export default async function EditEmployeePage({
     <div className="space-y-6">
       <EditEmployeeForm employee={employeeResult.data} />
       <EmployeeExportPanel employeeId={id} availableYears={years} />
+      <VacationSimulator employeeId={id} />
     </div>
   )
 }
