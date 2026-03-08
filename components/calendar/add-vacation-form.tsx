@@ -26,9 +26,10 @@ import { es } from "date-fns/locale"
 
 interface AddVacationFormProps {
   employees: { id: string; full_name: string }[]
+  holidays: { date: string; name: string; type: 'nacional' | 'autonomico' | 'local' }[]
 }
 
-export function AddVacationForm({ employees }: AddVacationFormProps) {
+export function AddVacationForm({ employees, holidays }: AddVacationFormProps) {
   const router = useRouter()
   const currentYear = new Date().getFullYear()
 
@@ -86,6 +87,27 @@ export function AddVacationForm({ employees }: AddVacationFormProps) {
     }
   }
 
+  const holidayNacional = useMemo(
+    () => holidays.filter(h => h.type === 'nacional').map(h => new Date(h.date + 'T00:00:00')),
+    [holidays]
+  )
+  const holidayAutonomico = useMemo(
+    () => holidays.filter(h => h.type === 'autonomico').map(h => new Date(h.date + 'T00:00:00')),
+    [holidays]
+  )
+  const holidayLocal = useMemo(
+    () => holidays.filter(h => h.type === 'local').map(h => new Date(h.date + 'T00:00:00')),
+    [holidays]
+  )
+  const allHolidays = useMemo(
+    () => [...holidayNacional, ...holidayAutonomico, ...holidayLocal],
+    [holidayNacional, holidayAutonomico, holidayLocal]
+  )
+  const holidaysSet = useMemo(
+    () => new Set(holidays.map(h => h.date)),
+    [holidays]
+  )
+
   // Set para lookups O(1) en lugar de .some() O(n) (js-set-map-lookups)
   const existingDatesSet = useMemo(
     () => new Set(existingDates.map((d) => toISODate(d))),
@@ -129,6 +151,7 @@ export function AddVacationForm({ employees }: AddVacationFormProps) {
 
     const iso = toISODate(day)
     if (existingDatesSet.has(iso)) return
+    if (holidaysSet.has(iso)) return
 
     setNewSelectedDates((prev) => {
       const exists = prev.some((d) => toISODate(d) === iso)
@@ -236,6 +259,25 @@ export function AddVacationForm({ employees }: AddVacationFormProps) {
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-4 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="h-4 w-4 rounded-sm bg-red-600 inline-block" />
+          <span>Festivo Nacional</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-4 w-4 rounded-sm bg-green-600 inline-block" />
+          <span>Festivo Autonómico</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-4 w-4 rounded-sm bg-blue-600 inline-block" />
+          <span>Festivo Local</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-4 w-4 rounded-sm bg-yellow-400 inline-block" />
+          <span>Vacaciones</span>
+        </div>
+      </div>
+
       {selectedEmployeeId && (
         <div className={cn(isLoadingEmployee && "opacity-50")}>
           <div className="flex items-center gap-4 mb-4 text-sm flex-wrap">
@@ -272,6 +314,7 @@ export function AddVacationForm({ employees }: AddVacationFormProps) {
             <Calendar
               key={calendarYear}
               locale={es}
+              showOutsideDays={false}
               mode="multiple"
               selected={existingDates}
               onDayClick={handleDayClick}
@@ -279,14 +322,20 @@ export function AddVacationForm({ employees }: AddVacationFormProps) {
               defaultMonth={new Date(calendarYear, 0)}
               startMonth={new Date(calendarYear, 0)}
               endMonth={new Date(calendarYear, 11)}
-              disabled={[{ dayOfWeek: [0, 6] }, ...existingDates]}
+              disabled={[{ dayOfWeek: [0, 6] }, ...existingDates, ...allHolidays]}
               modifiers={{
                 existing: existingDates,
                 newSelected: newSelectedDates,
+                holidayNacional: holidayNacional,
+                holidayAutonomico: holidayAutonomico,
+                holidayLocal: holidayLocal,
               }}
               modifiersClassNames={{
                 existing: "!bg-yellow-400 !text-black !opacity-100 cursor-not-allowed font-medium",
                 newSelected: "!bg-red-500 !text-black !rounded-md font-semibold",
+                holidayNacional: "!bg-red-600 !text-white !opacity-100 cursor-not-allowed",
+                holidayAutonomico: "!bg-green-600 !text-white !opacity-100 cursor-not-allowed",
+                holidayLocal: "!bg-blue-600 !text-white !opacity-100 cursor-not-allowed",
               }}
               className="[--cell-size:--spacing(8)]"
               classNames={{

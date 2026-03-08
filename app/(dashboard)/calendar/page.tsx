@@ -1,16 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { VacationSummaryTable } from '@/components/calendar/vacation-summary-table';
 import { AddVacationForm } from '@/components/calendar/add-vacation-form';
-import { getEmployeesVacationSummary, getActiveEmployees } from './actions';
+import { getEmployeesVacationSummary, getActiveEmployees, getHolidaysByYear } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CalendarPage() {
   const currentYear = new Date().getFullYear();
 
-  const [summaryResult, employeesResult] = await Promise.all([
+  const [summaryResult, employeesResult, holidaysResult] = await Promise.all([
     getEmployeesVacationSummary(currentYear),
     getActiveEmployees(),
+    getHolidaysByYear(currentYear),
   ]);
 
   // Generar años desde 2020 hasta el año actual (sin futuros)
@@ -56,7 +57,7 @@ export default async function CalendarPage() {
           </CardHeader>
           <CardContent>
             {employeesResult.success ? (
-              <AddVacationForm employees={employeesResult.data} />
+              <AddVacationForm employees={employeesResult.data} holidays={holidaysResult.data} />
             ) : (
               <p className="text-sm text-destructive">{employeesResult.error}</p>
             )}

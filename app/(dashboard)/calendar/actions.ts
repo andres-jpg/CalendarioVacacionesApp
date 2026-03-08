@@ -111,6 +111,33 @@ export async function getEmployeesVacationSummary(year: number): Promise<{
   }
 }
 
+export async function getHolidaysByYear(year: number): Promise<{
+  success: boolean
+  error?: string
+  data: { date: string; name: string; type: 'nacional' | 'autonomico' | 'local' }[]
+}> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await (supabase
+      .from("holidays") as any)
+      .select("date, name, type")
+      .gte("date", `${year}-01-01`)
+      .lte("date", `${year}-12-31`)
+      .order("date")
+
+    if (error) {
+      console.error("Error fetching holidays:", error)
+      return { success: false, error: error.message, data: [] }
+    }
+
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error("Error in getHolidaysByYear:", error)
+    return { success: false, error: "Error inesperado", data: [] }
+  }
+}
+
 export async function getActiveEmployees(): Promise<{
   success: boolean
   error?: string

@@ -48,6 +48,7 @@ export function DatePicker({ date, onDateChange, placeholder = "Selecciona una f
             captionLayout="dropdown"
             fromYear={1990}
             toYear={2050}
+            showOutsideDays={false}
             autoFocus
             locale={es}
           />
