@@ -1,6 +1,9 @@
 import type { Database } from '@/lib/supabase/database.types';
 
 // Tipos extraídos de las tablas de Supabase
+export type Company = Database['public']['Tables']['companies']['Row'];
+export type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
+
 export type Employee = Database['public']['Tables']['employees']['Row'];
 export type EmployeeInsert = Database['public']['Tables']['employees']['Insert'];
 export type EmployeeUpdate = Database['public']['Tables']['employees']['Update'];
@@ -45,6 +48,7 @@ export interface EmployeeFormData {
   email?: string;
   hire_date: string;
   is_active: boolean;
+  days_from_previous_year?: number;
 }
 
 export interface VacationSettingsFormData {

@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentCompanyId } from "@/lib/supabase/get-company-id"
 import { revalidatePath } from "next/cache"
 import type { VacationSummary } from "@/types"
 import { toISODate } from "@/lib/utils/date-helpers"
@@ -13,12 +14,13 @@ export async function getEmployeesVacationSummary(year: number): Promise<{
 }> {
   try {
     const supabase = await createClient()
+    const companyId = await getCurrentCompanyId()
 
-    // Obtener empleados activos
     const { data: employees, error: empError } = await (supabase
       .from("employees") as any)
       .select("id, full_name, hire_date")
       .eq("is_active", true)
+      .eq("company_id", companyId)
       .order("full_name")
 
     if (empError) {
@@ -32,7 +34,6 @@ export async function getEmployeesVacationSummary(year: number): Promise<{
 
     const employeeIds = employees.map((e: any) => e.id)
 
-    // Obtener balances y días de vacaciones en paralelo
     const startDate = `${year}-01-01`
     const endDate = `${year}-12-31`
 
@@ -60,13 +61,11 @@ export async function getEmployeesVacationSummary(year: number): Promise<{
       return { success: false, error: vdError.message, data: [] }
     }
 
-    // Contar días tomados por empleado
     const daysTakenMap: Record<string, number> = {}
     for (const vd of vacationDays || []) {
       daysTakenMap[vd.employee_id] = (daysTakenMap[vd.employee_id] || 0) + 1
     }
 
-    // Mapear balances por empleado
     const balanceMap: Record<string, { days_from_previous_year: number; days_current_year: number }> = {}
     for (const b of balances || []) {
       balanceMap[b.employee_id] = {
@@ -75,7 +74,6 @@ export async function getEmployeesVacationSummary(year: number): Promise<{
       }
     }
 
-    // Construir resumen
     const today = new Date()
     const summary: VacationSummary[] = employees.map((emp: any) => {
       const balance = balanceMap[emp.id]
@@ -118,10 +116,12 @@ export async function getHolidaysByYear(year: number): Promise<{
 }> {
   try {
     const supabase = await createClient()
+    const companyId = await getCurrentCompanyId()
 
     const { data, error } = await (supabase
       .from("holidays") as any)
       .select("date, name, type")
+      .eq("company_id", companyId)
       .gte("date", `${year}-01-01`)
       .lte("date", `${year}-12-31`)
       .order("date")
@@ -145,11 +145,13 @@ export async function getActiveEmployees(): Promise<{
 }> {
   try {
     const supabase = await createClient()
+    const companyId = await getCurrentCompanyId()
 
     const { data: employees, error } = await (supabase
       .from("employees") as any)
       .select("id, full_name")
       .eq("is_active", true)
+      .eq("company_id", companyId)
       .order("full_name")
 
     if (error) {
@@ -201,17 +203,25 @@ export async function addVacationDays(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient()
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return { success: false, error: "No autenticado" }
-    }
+    const companyId = await getCurrentCompanyId()
 
     if (!dates.length) {
       return { success: false, error: "No se seleccionaron días" }
     }
 
-    // Agrupar fechas por año para validar cada año por separado
+    // Verify the employee belongs to the current company
+    const { data: emp, error: empError } = await (supabase
+      .from("employees") as any)
+      .select("id")
+      .eq("id", employeeId)
+      .eq("company_id", companyId)
+      .single()
+
+    if (empError || !emp) {
+      return { success: false, error: "Empleado no encontrado" }
+    }
+
+    // Group dates by year for per-year balance validation
     const byYear = new Map<number, string[]>()
     for (const date of dates) {
       const y = parseInt(date.substring(0, 4), 10)
@@ -219,7 +229,6 @@ export async function addVacationDays(
     }
     const years = [...byYear.keys()]
 
-    // Obtener balances y días existentes de todos los años en paralelo
     const [balancesResult, ...existingResults] = await Promise.all([
       (supabase.from("vacation_balance") as any)
         .select("year, days_from_previous_year, days_current_year")
@@ -240,7 +249,6 @@ export async function addVacationDays(
       return { success: false, error: balError.message }
     }
 
-    // Mapear días existentes por año
     const existingByYear = new Map<number, number>()
     for (let i = 0; i < years.length; i++) {
       const { data: existingDays, error: existError } = existingResults[i]
@@ -251,8 +259,7 @@ export async function addVacationDays(
       existingByYear.set(years[i], existingDays?.length ?? 0)
     }
 
-    // Validar con cascada: el excedente de años anteriores cubre el déficit de años posteriores.
-    // Ej: 3 días sobrantes en 2026 + 0 en 2027 → se pueden seleccionar 2 en dic-2026 y 1 en ene-2027.
+    // Validate with surplus cascade across years
     const sortedYears = [...byYear.keys()].sort((a, b) => a - b)
     let surplus = 0
 
@@ -277,7 +284,6 @@ export async function addVacationDays(
       }
     }
 
-    // Insertar todos los días
     const rows = dates.map((date) => ({ employee_id: employeeId, date }))
 
     const { error: insertError } = await (supabase
@@ -333,17 +339,13 @@ export async function addComment(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient()
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return { success: false, error: "No autenticado" }
-    }
+    const companyId = await getCurrentCompanyId()
 
     const date = toISODate(new Date())
 
     const { error: insertError } = await (supabase
       .from("comments") as any)
-      .insert({ employee_id: employeeId, text, date, year })
+      .insert({ employee_id: employeeId, text, date, year, company_id: companyId })
 
     if (insertError) {
       console.error("Error inserting comment:", insertError)

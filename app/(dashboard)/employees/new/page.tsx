@@ -41,6 +41,9 @@ const employeeFormSchema = z.object({
   hire_date: z.date({
     message: "La fecha de ingreso es requerida.",
   }),
+  days_from_previous_year: z.coerce.number().min(0, {
+    message: "No puede ser negativo.",
+  }).default(0),
 })
 
 type EmployeeFormValues = z.infer<typeof employeeFormSchema>
@@ -55,6 +58,7 @@ export default function NewEmployeePage() {
       full_name: "",
       email: "",
       hire_date: new Date(),
+      days_from_previous_year: 0,
     },
   })
 
@@ -67,6 +71,7 @@ export default function NewEmployeePage() {
         email: values.email || undefined,
         hire_date: format(values.hire_date, "yyyy-MM-dd"),
         is_active: true,
+        days_from_previous_year: values.days_from_previous_year,
       })
 
       if (result.success) {
@@ -161,6 +166,32 @@ export default function NewEmployeePage() {
                         disabled={isSubmitting}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="days_from_previous_year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      Días pendientes del año anterior <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.5}
+                        {...field}
+                        disabled={isSubmitting}
+                        className="h-11"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Días de vacaciones que le quedan sin disfrutar del año anterior.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
