@@ -41,12 +41,17 @@ const employeeFormSchema = z.object({
   hire_date: z.date({
     message: "La fecha de ingreso es requerida.",
   }),
-  days_from_previous_year: z.coerce.number().min(0, {
+  days_from_previous_year: z.number().min(0, {
     message: "No puede ser negativo.",
-  }).default(0),
+  }),
 })
 
-type EmployeeFormValues = z.infer<typeof employeeFormSchema>
+type EmployeeFormValues = {
+  full_name: string
+  email?: string
+  hire_date: Date
+  days_from_previous_year: number
+}
 
 export default function NewEmployeePage() {
   const router = useRouter()
@@ -184,7 +189,8 @@ export default function NewEmployeePage() {
                         type="number"
                         min={0}
                         step={0.5}
-                        {...field}
+                        value={field.value}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         disabled={isSubmitting}
                         className="h-11"
                       />
